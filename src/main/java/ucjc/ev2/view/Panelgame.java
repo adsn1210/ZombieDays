@@ -18,6 +18,7 @@ public class Panelgame extends JPanel {
     private final Image Suelo;
     private final Image imgEntrada;
     private final Image imgSalida;
+    private int tiempoRestante = 20;
 
     public Panelgame(Laberinto laberinto, Zombie zombie) {
         this.laberinto = laberinto;
@@ -46,6 +47,7 @@ public class Panelgame extends JPanel {
         try {
             dibujarLaberinto(g2d);
             zombie.dibujar(g2d);
+            dibujarHUD(g2d);
         } finally {
             g2d.dispose();
         }
@@ -90,5 +92,23 @@ public class Panelgame extends JPanel {
         Rectangle hitbox = zombie.getHitbox();
         g2d.setColor(new Color(255, 255, 255, 120));
         g2d.draw(hitbox);
+    }
+    public void setTiempoRestante(int tiempo) {
+        this.tiempoRestante = Math.max(0, tiempo);
+    }
+
+    // provisional
+    public void mostrarGameOver() {
+        System.out.println("GAME OVER");
+    }
+    private void dibujarHUD(Graphics2D g2d) {
+        // Fondo del HUD (barra inferior)
+        g2d.setColor(new Color(0, 0, 0, 180));
+        g2d.fillRect(0, getHeight() - 40, getWidth(), 40);
+
+        // Texto del tiempo
+        g2d.setColor(Color.WHITE);
+        g2d.setFont(new Font("Arial", Font.BOLD, 18));
+        g2d.drawString("Tiempo: " + tiempoRestante + "s", 10, getHeight() - 14);
     }
 }

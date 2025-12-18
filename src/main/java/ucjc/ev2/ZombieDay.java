@@ -37,6 +37,15 @@ public class ZombieDay {
         Controladorteclado control = new Controladorteclado();
         Buclegame bucle = new Buclegame(zombie,control,panel,laberinto);
 
+        /*Con esta prueba comprobamos que el TIMER no deberia estar en el constructor del Bucle ya que si el juego
+        tarda en iniciarse , el timer restara ese tiempo porque el SI! se ha iniciado, y en vez de 20 segundos seran -eltiempo que pasamos esperando -_-
+         */
+        /**System.out.println("Esperando 10 segundos antes de arrancar...");
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }**/
         Ventanaprincipal ventana = new Ventanaprincipal(panel);
         ventana.setVisible(true);
 
