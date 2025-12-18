@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Stack;
 
+
 //Clase para la creacion del Laberinto usando DFS como algoritmo
 public class Laberinto {
     //Creamos un laberinto base por defecto.
@@ -212,6 +213,20 @@ public class Laberinto {
         }
         return vecinos;
     }
+    public Point celdaCaminoAleatoria(Random rnd) {
+        int filas = mapa.length;
+        int cols = mapa[0].length;
+
+        while (true) {
+            int f = 1 + rnd.nextInt(filas - 2);
+            int c = 1 + rnd.nextInt(cols - 2);
+
+            if (mapa[f][c] == 0) {
+                return new Point(c, f); // x=col, y=fila
+            }
+        }
+    }
+
 
 }
 

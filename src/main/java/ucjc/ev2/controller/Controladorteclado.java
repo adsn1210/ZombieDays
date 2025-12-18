@@ -71,7 +71,7 @@ public class Controladorteclado implements KeyListener {
     //Esto debera cambiar en el futuro ya que la velocidad varia por las PUMKIN Y POCION, pero se usara para confirmar el cambio de velocidad
     public double multiplicadorVelocidad() {
         if (teclasActivas.contains(KeyEvent.VK_SHIFT)) {
-            return 1.75;
+            return 2.50;
         }
         if (teclasActivas.contains(KeyEvent.VK_CONTROL)) {
             return 0.6;

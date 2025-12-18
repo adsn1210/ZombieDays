@@ -10,15 +10,19 @@ public class Zombie {
     private double posicionX;
     private double posicionY;
     //Velocidad en PixelesXSegundo
-    private double velocidad = 1; //tambien double para darle suavidad
+    private double velocidad = 3.0; //tambien double para darle suavidad
 
     private static final int TAMANO_SRITE = 32;
-    private static final double FACTOR_HITBOX = 0.80;//La hitbox ocupa el 80% para que pueda girar el PJ
+    private static final double FACTOR_HITBOX = 0.75;//La hitbox ocupa el 80% para que pueda girar el PJ
 
     private final int ANCHO_ZOMBIE;
     private final int ALTO_ZOMBIE;
     private Image zombie;
-
+    private Image[] frameZombie;
+    private int frameIndex = 0;
+    private long lastFrameTime = 0;
+    private static final int FRAME_DELAY_MS = 100; // 100ms = 10 fps de animación
+    private boolean moviendose = false;
     //Constructor
     //overloading, se sustituye anchoxalto y se iguala a TAMANO_SPRITE ya que sus medidas seran 32x32px
     public Zombie(double posicionX, double posicionY, double velocidad, Image zombie) {
@@ -95,10 +99,10 @@ public class Zombie {
     }
 
     //Mueve el personaje pero antes verifica posibles colisiones con los muros del Maze,Se usan posicion Tentativas.
-    public void moverConColisiones(double deltaX, double deltaY, Laberinto laberinto) {
+    public void moverConColisiones(double deltaX, double deltaY, double multiplicadorEntrada,Laberinto laberinto) {
 
-        double proximaX = posicionX + deltaX * velocidad;
-        double proximaY = posicionY + deltaY * velocidad;
+        double proximaX = posicionX + (deltaX * velocidad * multiplicadorEntrada);
+        double proximaY = posicionY + (deltaY * velocidad * multiplicadorEntrada);
 
         Rectangle hitboxTentativa = getHitboxEn(proximaX, proximaY);
 
@@ -124,11 +128,43 @@ public class Zombie {
                 altoHitbox);
     }
 
+    public void setWalkFrames(Image[] frames) {
+        this.frameZombie = frames;
+        this.frameIndex = 0;
+        this.lastFrameTime = System.currentTimeMillis();
+    }
 
-    public void dibujar(Graphics2D g){
-        if (zombie != null){
+    public void setMoviendose(boolean mov) {
+        this.moviendose = mov;
+    }
+
+    public void actualizarAnimacion() {
+        if (frameZombie == null || frameZombie.length == 0) return;
+
+        if (!moviendose) {
+            frameIndex = 0; // idle = frame 0
+            return;
+        }
+
+        long ahora = System.currentTimeMillis();
+        if (ahora - lastFrameTime >= FRAME_DELAY_MS) {
+            frameIndex = (frameIndex + 1) % frameZombie.length;
+            lastFrameTime = ahora;
+        }
+    }
+
+    public void dibujar(Graphics2D g) {
+        Image img = null;
+
+        if (frameZombie != null && frameZombie.length > 0) {
+            img = frameZombie[frameIndex];
+        } else {
+            img = zombie; // fallback
+        }
+
+        if (img != null) {
             g.drawImage(
-                    zombie,
+                    img,
                     (int) Math.round(posicionX),
                     (int) Math.round(posicionY),
                     ANCHO_ZOMBIE,
@@ -136,7 +172,6 @@ public class Zombie {
                     null
             );
         } else {
-            // DIBUJO TEMPORAL por si no hay imagen
             g.setColor(Color.GREEN);
             g.fillRect(
                     (int) Math.round(posicionX),
@@ -146,6 +181,7 @@ public class Zombie {
             );
         }
     }
+
     private Image cargarImagen(String ruta) {
         var url = getClass().getResource(ruta);
         if (url == null) {

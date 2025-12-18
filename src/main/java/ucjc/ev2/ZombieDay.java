@@ -36,6 +36,15 @@ public class ZombieDay {
         Panelgame panel = new Panelgame(laberinto, zombie);
         Controladorteclado control = new Controladorteclado();
         Buclegame bucle = new Buclegame(zombie,control,panel,laberinto);
+        Image[] frames = new Image[] {
+                new ImageIcon(ZombieDay.class.getResource("/sprites/player/male/Walk(1).png")).getImage(),
+                new ImageIcon(ZombieDay.class.getResource("/sprites/player/male/Walk (2).png")).getImage(),
+                new ImageIcon(ZombieDay.class.getResource("/sprites/player/male/Walk (3).png")).getImage(),
+                new ImageIcon(ZombieDay.class.getResource("/sprites/player/male/Walk (4).png")).getImage(),
+                new ImageIcon(ZombieDay.class.getResource("/sprites/player/male/Walk (5).png")).getImage()
+        };
+
+        zombie.setWalkFrames(frames);
 
         /*Con esta prueba comprobamos que el TIMER no deberia estar en el constructor del Bucle ya que si el juego
         tarda en iniciarse , el timer restara ese tiempo porque el SI! se ha iniciado, y en vez de 20 segundos seran -eltiempo que pasamos esperando -_-

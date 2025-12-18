@@ -4,6 +4,14 @@ import ucjc.ev2.model.EstadoJuego;
 import ucjc.ev2.model.Laberinto;
 import ucjc.ev2.model.Zombie;
 import ucjc.ev2.view.Panelgame;
+import ucjc.ev2.model.Pocima;
+import ucjc.ev2.model.Pumpkin;
+import ucjc.ev2.model.Objetos;
+
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import javax.swing.*;
 
@@ -15,20 +23,43 @@ public class Buclegame {
     private final Controladorteclado controladorteclado;
     private final Panelgame panel;
     private final Laberinto laberinto;
-    private final double velocidadBase;
-    private static final int DURACION_PARTIDA = 20;
+    private static final int DURACION_PARTIDA = 30;
     private long tiempoInicio; //Cuando se llame cogera el Tiempo ABSOLUTO (el del sistema)
     private EstadoJuego estado;
+
+    private final List<Pumpkin> pumpkins = new ArrayList<>();
+    private Pocima pocima;
+    private final Random rand = new Random();
 
     public Buclegame(Zombie zombie, Controladorteclado controladorteclado, Panelgame panel, Laberinto laberinto) {
         this.zombie = zombie;
         this.controladorteclado = controladorteclado;
         this.panel = panel;
         this.laberinto = laberinto;
-        this.velocidadBase = zombie.getVelocidad();
+        int celda = laberinto.getTamanoCelda();
         int delay = 1000 / FPS;
+
         this.timer = new Timer(delay, e -> actualizar()); //Aqui le decimos al TIMER que hacer
         //cada vez que pase el tiempo del delay, ejecuta el metodo actualizar()".
+
+        // 1. Crear 5 Pumpkins en sitios aleatorios
+        for (int i = 0; i < 5; i++) {
+            java.awt.Point p = laberinto.celdaCaminoAleatoria(rand);
+            double x = p.x * celda;
+            double y = p.y * celda;
+
+            Image imgP = new ImageIcon(getClass().getResource("/sprites/items/pumpkin.png")).getImage();
+            pumpkins.add(new Pumpkin(x, y, celda, celda, imgP));
+        }
+
+        // 2. Crear 1 Pócima
+        java.awt.Point pPocion = laberinto.celdaCaminoAleatoria(rand);
+        Image imgPocima = new ImageIcon(getClass().getResource("/sprites/items/pocima.png")).getImage();
+        this.pocima = new Pocima(pPocion.x * celda, pPocion.y * celda, celda, celda, imgPocima);
+
+        // 3. Informar al panel para que sepa qué dibujar
+        panel.setPumpkins(pumpkins);
+        panel.setPocima(pocima);
     }
 
     private void actualizar() {
@@ -39,7 +70,7 @@ public class Buclegame {
         }
         actualizarTiempo();
 
-        zombie.setVelocidad(velocidadBase * controladorteclado.multiplicadorVelocidad());
+        double multTeclado = controladorteclado.multiplicadorVelocidad();
 
         Controladorteclado.Direccion direccion = controladorteclado.direccionActual();
         double deltaX = 0;
@@ -54,11 +85,50 @@ public class Buclegame {
             default -> {
             }
         }
-        if (direccion != Controladorteclado.Direccion.NINGUNA) {
-            zombie.moverConColisiones(deltaX, deltaY, laberinto);
-        }
-        panel.repaint(); //Lo sacamos para que el tiempo tambien se vea como va bajando
 
+        // --- MOVIMIENTO DEL ZOMBIE ---
+        if (direccion != Controladorteclado.Direccion.NINGUNA) {
+            zombie.moverConColisiones(deltaX, deltaY,multTeclado, laberinto);
+        }
+        boolean seMueve = (direccion != Controladorteclado.Direccion.NINGUNA);
+        zombie.setMoviendose(seMueve);
+        zombie.actualizarAnimacion();
+
+
+        // --- LÓGICA DE OBJETOS (FUERA DEL BLOQUE DE DIRECCIÓN PARA QUE SE MUEVAN SIEMPRE) ---
+
+        // A) Mover calabazas
+        for (Pumpkin p : pumpkins) {
+            p.update(laberinto);
+        }
+
+        // B) Colisión con Calabazas (PENALIZACIÓN)
+        for (Pumpkin p : pumpkins) {
+            if (p.isActivo() && zombie.getHitbox().intersects(p.getHitbox())) {
+                zombie.setVelocidad(zombie.getVelocidad() * 0.5);
+
+                p.desactivar(); // Desaparece al tocarla
+                System.out.println("¡Calabaza! Velocidad reducida.");
+
+                // --- NUEVA LÓGICA: RESTAURACIÓN TRAS 3 SEGUNDOS ---
+                // Creamos un Timer que no bloquea el juego (asíncrono)
+                Timer timerRestaurar = new Timer(3000, e -> {
+                    zombie.setVelocidad(zombie.getVelocidad() / 0.5); // Divide por 0.5 para volver al valor original
+                    System.out.println("¡Efecto de calabaza terminado! Velocidad normal.");
+                });
+                timerRestaurar.setRepeats(false); // Solo se ejecuta una vez
+                timerRestaurar.start();
+            }
+        }
+
+        // C) Colisión con Pócima (BENEFICIO)
+        if (pocima != null && pocima.isActivo() && zombie.getHitbox().intersects(pocima.getHitbox())) {
+            zombie.setVelocidad(zombie.getVelocidad() * 1.2);
+            pocima.desactivar(); // Desaparece
+            System.out.println("¡Pócima mágica! Velocidad aumentada.");
+        }
+
+        panel.repaint(); //Lo sacamos para que el tiempo tambien se vea como va bajando
     }
 
     /*
@@ -98,6 +168,4 @@ public class Buclegame {
         this.estado = EstadoJuego.EN_JUEGO;//enum
         timer.start();
     }
-
-
 }
