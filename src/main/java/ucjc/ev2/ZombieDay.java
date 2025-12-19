@@ -14,17 +14,17 @@ import java.awt.*;
 
 public class ZombieDay {
 
-    public static void main(String[] args) {
+   // public static void main(String[] args) {
 
-        /* La forma correcta de Ejecutar el main
-               ***  public static void main(String[] args) {
-               ***   SwingUtilities.invokeLater(() -> {
-               ***   new PantallaInicio(ZombieDay::iniciarJuego);
-            ***   });
-         ***    }
-*/
-            new PantallaInicio(ZombieDay::iniciarJuego);
-    }
+      // La forma correcta de Ejecutar el main
+                 public static void main(String[] args) {
+                  SwingUtilities.invokeLater(() -> {
+                  new PantallaInicio(ZombieDay::iniciarJuego);
+              });
+             }
+
+           // new PantallaInicio(ZombieDay::iniciarJuego);
+   // }
 
 
     public static void iniciarJuego(){
