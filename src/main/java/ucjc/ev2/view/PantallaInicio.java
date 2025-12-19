@@ -16,7 +16,10 @@ public class PantallaInicio extends JFrame {
         SoundPlayer.reproducir("/sounds/horror.wav");
         establecerIcono();
 
-        FondoInicio panel = new FondoInicio();
+        FondoImagen panel = new FondoImagen(
+                "/pantallaInicio/mazeInit.png",
+                800, 690
+        );
 
         //Layout absoluto
         panel.setLayout(null);

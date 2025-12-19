@@ -1,5 +1,6 @@
 package ucjc.ev2.controller;
 
+import ucjc.ev2.ZombieDay;
 import ucjc.ev2.model.EstadoJuego;
 import ucjc.ev2.model.Laberinto;
 import ucjc.ev2.model.Zombie;
@@ -7,6 +8,9 @@ import ucjc.ev2.view.Panelgame;
 import ucjc.ev2.model.Pocima;
 import ucjc.ev2.model.Pumpkin;
 import ucjc.ev2.model.Objetos;
+import ucjc.ev2.view.PantallaGameOver;
+import ucjc.ev2.view.PantallaInicio;
+import ucjc.ev2.view.PantallaVictoria;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -88,7 +92,7 @@ public class Buclegame {
 
         // --- MOVIMIENTO DEL ZOMBIE ---
         if (direccion != Controladorteclado.Direccion.NINGUNA) {
-            zombie.moverConColisiones(deltaX, deltaY,multTeclado, laberinto);
+            zombie.moverConColisiones(deltaX, deltaY, multTeclado, laberinto);
         }
         boolean seMueve = (direccion != Controladorteclado.Direccion.NINGUNA);
         zombie.setMoviendose(seMueve);
@@ -127,6 +131,7 @@ public class Buclegame {
             pocima.desactivar(); // Desaparece
             System.out.println("¡Pócima mágica! Velocidad aumentada.");
         }
+        comprobarVictoria();
 
         panel.repaint(); //Lo sacamos para que el tiempo tambien se vea como va bajando
     }
@@ -157,11 +162,69 @@ public class Buclegame {
             Pues no se vuelve loco por el Truncamiento de (int)
             */
         if (restantes <= 0) {
-            estado = EstadoJuego.GAME_OVER;
-            timer.stop();
-            panel.mostrarGameOver();
+            gameOver();
+        }
+
+    }
+
+    private void gameOver() {
+        estado = EstadoJuego.GAME_OVER;
+        timer.stop();
+
+        SwingUtilities.invokeLater(() -> {
+            // 1. Cerramos la ventana actual del juego para liberar memoria
+            Window w = SwingUtilities.getWindowAncestor(panel);
+            if (w != null) {
+                w.dispose();
+            }
+
+            // 2. Creamos la pantalla de Game Over
+            new PantallaGameOver(
+                    () -> {
+                        // MODIFICACIÓN: Llamamos a la pantalla de inicio y le pasamos
+                        // el método que tú ya tienes creado en el Main.
+                        new PantallaInicio(ZombieDay::iniciarJuego);
+                    },
+                    () -> System.exit(0) // Cierra el programa
+            );
+        });
+    }
+
+    private void victoria(String ganador) {
+        estado = EstadoJuego.VICTORIA;
+        timer.stop();
+
+        SwingUtilities.invokeLater(() -> {
+            // 1. Cerramos la ventana actual
+            Window w = SwingUtilities.getWindowAncestor(panel);
+            if (w != null) w.dispose();
+
+            // 2. Creamos la pantalla de Victoria
+            new PantallaVictoria(
+                    ganador,
+                    () -> {
+                        // MODIFICACIÓN: Al ganar, también permitimos volver al inicio
+                        new PantallaInicio(ZombieDay::iniciarJuego);
+                    },
+                    () -> System.exit(0)
+            );
+        });
+    }
+
+    private void comprobarVictoria() {
+        Rectangle hitZombie = zombie.getHitbox();
+
+        // La salida es una celda (en píxeles) del tamaño del tile
+        Point salidaPx = laberinto.getSalidaEnPixeles();
+        int celda = laberinto.getTamanoCelda();
+
+        Rectangle hitSalida = new Rectangle(salidaPx.x, salidaPx.y, celda, celda);
+
+        if (hitZombie.intersects(hitSalida)) {
+            victoria("Zombie 1");
         }
     }
+
 
     public void iniciar() {
         this.tiempoInicio = System.currentTimeMillis();

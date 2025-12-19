@@ -27,7 +27,7 @@ public class ZombieDay {
     }
 
 
-    private static void iniciarJuego(){
+    public static void iniciarJuego(){
         Laberinto laberinto = new Laberinto(15,21);
         int celda = laberinto.getTamanoCelda();
         Point entrada = laberinto.getEntradaEnPixeles();
